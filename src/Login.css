@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500&display=swap');
+
+#loginpage{
+    font-family: 'Poppins', sans-serif;
+    background: #ececec;
+}
+
+/*------------ Login container ------------*/
+
+.box-area{
+    width: 930px;
+}
+
+/*------------ Right box ------------*/
+
+.right-box{
+    padding: 40px 30px 40px 40px;
+}
+
+/*------------ Custom Placeholder ------------*/
+
+::placeholder{
+    font-size: 16px;
+}
+
+.rounded-4{
+    border-radius: 20px;
+}
+.rounded-5{
+    border-radius: 30px;
+}
+
+
+/*------------ For small screens------------*/
+
+@media only screen and (max-width: 768px){
+
+     .box-area{
+        margin: 0 10px;
+
+     }
+     .left-box{
+        height: 100px;
+        overflow: hidden;
+     }
+     .right-box{
+        padding: 20px;
+     }
+
+}
+
+@media only screen and (max-width: 992px) {
+    /* Adjustments for tablets */
+    .box-area {
+      width: 85%; /* Make the box area slightly narrower on tablets */
+    }
+  }
+  
+  @media only screen and (max-width: 768px) {
+    /* Adjustments for small tablets and large phones */
+    .left-box, .right-box {
+      padding: 20px;
+    }
+    .box-area {
+      margin: 0 5%;
+      width: 90%; /* Increase width to use more screen space */
+    }
+    .featured-image img {
+      width: 200px; /* Adjust logo size */
+    }
+  }
+  
+  @media only screen and (max-width: 480px) {
+    /* Adjustments for smaller phones */
+    .left-box {
+      display: none; /* Optionally hide the left box with the logo on very small screens */
+    }
+    .box-area, .right-box {
+      margin: 0;
+      padding: 15px;
+      width: 100%;
+    }
+    .input-group mb-3, .btn {
+      font-size: 14px; /* Adjust font size for readability */
+    }
+  }
+  
