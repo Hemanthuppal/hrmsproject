@@ -31,6 +31,7 @@ import OverallEmpDashboard from './OverallEmpDashboard';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignOutAlt,faBars,faL} from "@fortawesome/free-solid-svg-icons";
 import EmployeeMonthlyAttendance from './EmployeeMonthlyAttendance';
+import EmployeeMonthlyReport from './EmployeeMonthlyReport';
 import Holidays from './HolidaysList';
 
 function EmployeeDashboard() {
@@ -224,6 +225,12 @@ function EmployeeDashboard() {
             {isSidebarOpen && "Monthly Attendance"}
           </li>
           <li
+            onClick={() => handlePageChange("monthlyReport")}
+            style={menuItemStyle("monthlyReport")}
+          >
+            {isSidebarOpen && "Monthly Report"}
+          </li>
+          <li
             onClick={() => handlePageChange("viewLeave")}
             style={menuItemStyle("viewLeave")}
           >
@@ -403,6 +410,7 @@ function EmployeeDashboard() {
           {activePage === 'profile' && <EmployeeProfile />}
           {activePage === 'markAttendance' && <MarkAttendance />}
           {activePage === 'monthlyAttendance' && <EmployeeMonthlyAttendance />}
+          {activePage === 'monthlyReport' && <EmployeeMonthlyReport />}
           {activePage === 'viewLeave' && <ViewLeave />}
           {activePage === 'performancereview' && <PerformanceReview />}
           {activePage === 'performancereport' && <EmployeeReport />}

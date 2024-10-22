@@ -5,6 +5,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as XLSX from 'xlsx';
 import { useLocation } from 'react-router-dom';
+import { useQuery } from 'react-query'; // Import useQuery
 
 const MonthlyReport = () => {
   const [employeeData, setEmployeeData] = useState([]);
@@ -40,87 +41,174 @@ const MonthlyReport = () => {
     }
   }
 
-  // Fetch managers
-  useEffect(() => {
-    const fetchManagers = async () => {
-      try {
-        const usersRef = collection(db, 'users');
-        const managersQuery = query(usersRef, where("role", "==", "Manager"));
-        const managersSnapshot = await getDocs(managersQuery);
-        const fetchedManagers = managersSnapshot.docs.map(doc => ({ uid: doc.id, fullName: doc.data().fullName }));
-        setManagers(fetchedManagers);
-      } catch (error) {
-        console.error('Error fetching managers:', error);
-      }
-    };
+  const { isLoading, data, refetch } = useQuery('managers', async () => {
+    try {
+      const usersRef = collection(db, 'users');
+      const managersQuery = query(usersRef, where("role", "==", "Manager"));
+      const managersSnapshot = await getDocs(managersQuery);
+      return managersSnapshot.docs.map(doc => ({ uid: doc.id, fullName: doc.data().fullName }));
+    } catch (error) {
+      console.error('Error fetching managers:', error);
+      throw error; // Rethrow the error to ensure proper error handling
+    }
+  }, {
+    refetchOnMount: true, // Enable automatic refetching on component mount
+    enabled: false, // Disable automatic fetching on mount
+  });
 
-    fetchManagers();
-  }, []);
+  const fetchEmployeeUids = async () => {
+    try {
+      const usersRef = collection(db, 'users');
+      const employeesQuery = query(usersRef, where("role", "==", "Employee"));
+      const employeesSnapshot = await getDocs(employeesQuery);
+      const uids = employeesSnapshot.docs.map(doc => doc.id);
+      console.log('Employee UIDs:', uids); // Log UIDs to console
+      return uids;
+    } catch (error) {
+      console.error('Error fetching employee UIDs:', error);
+      return [];
+    }
+  };
+  
+  // Fetch data whenever role changes
+ useEffect(() => {
+    if (role) {
+      if (role === 'Employee') {
+        fetchEmployeeUids(); // Fetch and log employee UIDs when role is Employee
+      }
+      refetch(); // Manually trigger a refetch for managers
+    }
+  }, [role]);
+  
+  // Update managers state when data is fetched
+  useEffect(() => {
+    if (!isLoading && data) {
+      setManagers(data);
+    }
+  }, [isLoading, data]);
+  
 
   // Fetch employee data based on role
   const fetchEmployeeDataBasedOnRole = async () => {
     let managerUids = [];
-
+    let employeeUids = [];
+  
     if (role === 'Employee' && selectedManager) {
       managerUids = [selectedManager];
     } else if (role === 'Manager') {
       managerUids = await fetchManagerUids();
+    } else if (role === 'All') {
+      managerUids = await fetchManagerUids();
+      employeeUids = await fetchEmployeeUids(); // Fetch employee UIDs for 'All' role
     } else {
       return; // Exit if no valid role or manager selected
     }
-
+  
     try {
       let allEmployeeData = [];
-      for (const managerUid of managerUids) {
-        const collectionName = role === 'Employee' ? `attendance_${managerUid}` : `attendances_${managerUid}`;
-        const attendanceCollectionRef = collection(db, collectionName);
-        const attendanceDocs = await getDocs(attendanceCollectionRef);
-        const filteredEmployeeData = {};
-
-        attendanceDocs.docs.forEach(doc => {
-          const date = doc.id.split('_')[0];
-          const employeeUid = doc.id.split('_')[1];
-
-          if (!filteredEmployeeData[employeeUid]) {
-            filteredEmployeeData[employeeUid] = {
-              employeeUid,
-              name: doc.data().name,
-              records: {},
+      if (role === 'All') {
+        // Fetch data for both employees and managers
+        for (const managerUid of managerUids) {
+          const collectionName = `attendances_${managerUid}`;
+          const attendanceCollectionRef = collection(db, collectionName);
+          const attendanceDocs = await getDocs(attendanceCollectionRef);
+          const filteredEmployeeData = {};
+  
+          attendanceDocs.docs.forEach(doc => {
+            const date = doc.id.split('_')[0];
+            const employeeUid = doc.id.split('_')[1];
+  
+            if (!filteredEmployeeData[employeeUid]) {
+              filteredEmployeeData[employeeUid] = {
+                employeeUid,
+                name: doc.data().name,
+                records: {},
+              };
+            }
+  
+            filteredEmployeeData[employeeUid].records[date] = {
+              status: doc.data().status,
+              totalDuration: doc.data().totalDuration,
             };
-          }
-
-          filteredEmployeeData[employeeUid].records[date] = {
-            status: doc.data().status,
-            totalDuration: doc.data().totalDuration,
-          };
-        });
-
-        allEmployeeData = allEmployeeData.concat(Object.values(filteredEmployeeData));
+          });
+  
+          allEmployeeData = allEmployeeData.concat(Object.values(filteredEmployeeData));
+        }
+  
+        // Fetch employee data from their own collection
+        for (const employeeUid of employeeUids) {
+          const collectionName = `attendance_${employeeUid}`;
+          const attendanceCollectionRef = collection(db, collectionName);
+          const attendanceDocs = await getDocs(attendanceCollectionRef);
+          const filteredEmployeeData = {};
+  
+          attendanceDocs.docs.forEach(doc => {
+            const date = doc.id.split('_')[0];
+  
+            if (!filteredEmployeeData[employeeUid]) {
+              filteredEmployeeData[employeeUid] = {
+                employeeUid,
+                name: doc.data().name,
+                records: {},
+              };
+            }
+  
+            filteredEmployeeData[employeeUid].records[date] = {
+              status: doc.data().status,
+              totalDuration: doc.data().totalDuration,
+            };
+          });
+  
+          allEmployeeData = allEmployeeData.concat(Object.values(filteredEmployeeData));
+        }
+      } else {
+        // Handle non-'All' roles as before
+        for (const managerUid of managerUids) {
+          const collectionName = role === 'Employee' ? `attendance_${managerUid}` : `attendances_${managerUid}`;
+          const attendanceCollectionRef = collection(db, collectionName);
+          const attendanceDocs = await getDocs(attendanceCollectionRef);
+          const filteredEmployeeData = {};
+  
+          attendanceDocs.docs.forEach(doc => {
+            const date = doc.id.split('_')[0];
+            const employeeUid = doc.id.split('_')[1];
+  
+            if (!filteredEmployeeData[employeeUid]) {
+              filteredEmployeeData[employeeUid] = {
+                employeeUid,
+                name: doc.data().name,
+                records: {},
+              };
+            }
+  
+            filteredEmployeeData[employeeUid].records[date] = {
+              status: doc.data().status,
+              totalDuration: doc.data().totalDuration,
+            };
+          });
+  
+          allEmployeeData = allEmployeeData.concat(Object.values(filteredEmployeeData));
+        }
       }
-
+  
       setEmployeeData(allEmployeeData);
     } catch (error) {
       console.error('Error fetching employee data:', error);
     }
   };
+  
 
-
-  const fetchEmployeeUids = async () => {
-  try {
-    const userQuery = query(collection(db, 'users'), where('role', '==', 'Employee'));
-    const querySnapshot = await getDocs(userQuery);
-    return querySnapshot.docs.map(doc => doc.id);
-  } catch (error) {
-    console.error('Error fetching employee UIDs:', error);
-    return [];
-  }
-};
   // Fetch manager UIDs
   const fetchManagerUids = async () => {
     try {
       const userQuery = query(collection(db, 'users'), where('role', '==', 'Manager'));
       const querySnapshot = await getDocs(userQuery);
-      return querySnapshot.docs.map(doc => doc.id);
+      const uids = querySnapshot.docs.map(doc => doc.id);
+  
+      // Console log to check the uids before returning
+      console.log('Manager UIDs:', uids);
+  
+      return uids;
     } catch (error) {
       console.error('Error fetching manager UIDs:', error);
       return [];
@@ -203,6 +291,7 @@ const MonthlyReport = () => {
                 <option value="" disabled>Select Role</option>
                 <option value="Manager">Manager</option>
                 <option value="Employee">Employee</option>
+                <option value="All">All</option>
               </select>
             </div>
             {role === 'Employee' && (

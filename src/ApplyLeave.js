@@ -15,7 +15,7 @@ function ApplyLeave() {
   const [description, setDescription] = useState('');
   const [leaveType, setLeaveType] = useState(''); // Changed to a string
   const [leaveTypes, setLeaveTypes] = useState([]); // Added for storing leave types
-
+  const [isApplying, setIsApplying] = useState(false);
   const [leaveStatus, setLeaveStatus] = useState('pending');
 
 
@@ -41,7 +41,15 @@ function ApplyLeave() {
     return null;
   };
   
-  
+  const getCurrentDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+
+  };
+
   const checkForHoliday = () => {
     const from = new Date(fromDate);
     const to = new Date(toDate);
@@ -111,6 +119,8 @@ function ApplyLeave() {
 
     const db = getFirestore(app);
 
+    setIsApplying(true);
+
     // Fetch the details of the logged-in employee
     const employeeDocRef = doc(db, "users", loggedInEmployeeId);
     const employeeDocSnap = await getDoc(employeeDocRef);
@@ -155,13 +165,20 @@ function ApplyLeave() {
           console.log("Leave application submitted successfully!");
         } catch (error) {
           console.error("Error submitting leave application:", error);
+        } finally {
+          setIsApplying(false);
         }
+        
       } else {
         console.error("Assigned manager UID not available for the logged-in employee.");
       }
     } else {
       console.error("Logged-in employee not found.");
     }
+  };
+  const validateDescription = (name) => {
+    const regex = /^[a-zA-Z\s]*$/;
+    return regex.test(name);
   };
 
   return (
@@ -230,38 +247,40 @@ function ApplyLeave() {
           </div>
 
           <div className="mb-3 row">
-            <label htmlFor="from_date" className="col-sm-3 col-form-label">
-              From Date:
-            </label>
-            <div className="col-sm-9">
-              <input
-                id="from_date"
-                name="from_date"
-                type="date"
-                className="form-control"
-                autoComplete="off"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-              />
+              <label htmlFor="from_date" className="col-sm-3 col-form-label">
+                From Date:
+              </label>
+              <div className="col-sm-9">
+                <input
+                  id="from_date"
+                  name="from_date"
+                  type="date"
+                  className="form-control"
+                  autoComplete="off"
+                  value={fromDate}
+                  min={getCurrentDate()}
+                  onChange={(e) => setFromDate(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="mb-3 row">
-            <label htmlFor="to_date" className="col-sm-3 col-form-label">
-              To Date:
-            </label>
-            <div className="col-sm-9">
-              <input
-                id="to_date"
-                name="to_date"
-                type="date"
-                className="form-control"
-                autoComplete="off"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-              />
+            <div className="mb-3 row">
+              <label htmlFor="to_date" className="col-sm-3 col-form-label">
+                To Date:
+              </label>
+              <div className="col-sm-9">
+                <input
+                  id="to_date"
+                  name="to_date"
+                  type="date"
+                  className="form-control"
+                  autoComplete="off"
+                  value={toDate}
+                  min={fromDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
 
           <div className="mb-3 row">
             <label htmlFor="description" className="col-sm-3 col-form-label">
@@ -273,7 +292,11 @@ function ApplyLeave() {
                 name="description"
                 rows="2"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => {
+                  if (validateDescription(e.target.value)) {
+                    setDescription(e.target.value);
+                  }
+                }}
                 required
                 className="form-control"
               ></textarea>
@@ -281,9 +304,9 @@ function ApplyLeave() {
           </div>
 
           <div className="text-center">
-            <button type="submit" name="button" className="btn btn-primary">
-              Apply
-            </button>
+            <button type="submit" name="button" className="btn btn-primary" disabled={isApplying}>
+                {isApplying ? 'Applying...' : 'Apply'}
+              </button>
           </div>
         </form>
       </div>

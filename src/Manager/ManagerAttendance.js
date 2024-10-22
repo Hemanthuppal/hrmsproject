@@ -24,12 +24,14 @@ const ManagerMarkAttendance = () => {
     const timerID = setInterval(() => {
       if (checkInTime && !checkOutTime) {
         const now = new Date();
-        const elapsed = now - checkInTime;
-        setDuration(formatDuration(elapsed));
-        
-        // Check if it's midnight, and if so, clear the interval
-        if (now.getHours() === 0 && now.getMinutes() === 0 && now.getSeconds() === 0) {
-          clearInterval(timerID);
+        if (now.getDate() !== checkInTime.getDate() || now.getMonth() !== checkInTime.getMonth() || now.getFullYear() !== checkInTime.getFullYear()) {
+          const endOfDay = new Date(checkInTime);
+          endOfDay.setHours(23, 59, 59, 999);
+          const elapsed = endOfDay - checkInTime;
+          setDuration(formatDuration(elapsed));
+        } else {
+          const elapsed = now - checkInTime;
+          setDuration(formatDuration(elapsed));
         }
       }
     }, 1000);
@@ -108,10 +110,6 @@ const ManagerMarkAttendance = () => {
     const now = new Date();
     setCheckOutTime(now);
     setIsLoading(true);
-    
-    // Clear the duration timer interval
-    clearInterval(durationTimer);
-    
     const durationMillis = now.getTime() - checkInTime.getTime();
     const durationHours = durationMillis / (1000 * 60 * 60);
     const finalStatus = durationHours >= 8 ? 'P' : 'A';
@@ -121,8 +119,6 @@ const ManagerMarkAttendance = () => {
     setIsLoading(false);
     alert(`Successfully checked out! Status: ${finalStatus}`);
   };
-
-  let durationTimer; // Declare a variable to hold the duration timer
 
   const updateAttendanceInDB = async (checkIn, checkOut, status) => {
     const formattedDate = selectedDate.toISOString().split('T')[0];
@@ -181,19 +177,20 @@ const ManagerMarkAttendance = () => {
         </div>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
           <label style={{ marginRight: '10px', marginTop: '5px', fontSize: '18px' }}>Select Date:</label>
-          <DatePicker
-            selected={selectedDate}
-            onChange={handleDateChange}
+          <DatePicker 
+            selected={selectedDate} 
+            onChange={handleDateChange} 
             dateFormat="dd/MM/yyyy"
             className="form-control"
             customInput={<CustomInput />}
+            maxDate={new Date()} // Disable future dates
           />
         </div>
         <div style={{ marginTop: '20px' }}>
           <table className="styled-table">
             <thead>
               <tr>
-                <th>Name</th>
+                {/* <th>Name</th> */}
                 <th>Check-In Time</th>
                 <th>Check-Out Time</th>
                 <th>Duration</th>
@@ -202,7 +199,7 @@ const ManagerMarkAttendance = () => {
             </thead>
             <tbody>
               <tr>
-                <td>{name}</td>
+                {/* <td>{name}</td> */}
                 <td>{checkInTime ? checkInTime.toLocaleTimeString() : '-'}</td>
                 <td>{checkOutTime ? checkOutTime.toLocaleTimeString() : '-'}</td>
                 <td>{duration}</td>

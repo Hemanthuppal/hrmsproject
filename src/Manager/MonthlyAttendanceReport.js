@@ -7,84 +7,58 @@ import * as XLSX from 'xlsx';
 import { useLocation } from 'react-router-dom';
 
 const ManagerMonthlyReport = () => {
-  const [employeeData, setEmployeeData] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [employeeData, setEmployeeData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
   const location = useLocation();
   const loggedInEmployeeId = location.state?.loggedInEmployeeId;
 
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const [recordsPerPage, setRecordsPerPage] = useState(10); 
-  const lastIndex = currentPage * recordsPerPage;
-  const firstIndex = lastIndex - recordsPerPage;
-  const npage = Math.ceil(employeeData.length / recordsPerPage);
-  const numbers = [...Array(npage + 1).keys()].slice(1);
-
-  function prePage() {
-    if (currentPage !== 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  }
-
-  function changeCPage(id) {
-    setCurrentPage(id);
-  }
-
-  function nextPage() {
-    if (currentPage !== npage) {
-      setCurrentPage(currentPage + 1);
-    }
-  }
-
-  const formatTimestampToTimeString = (timestamp) => {
-    if (!timestamp) return '';
-
-    let date;
-
-    if (timestamp.toDate) {
-      date = timestamp.toDate();
-    } else if (typeof timestamp === 'string') {
-      date = new Date(timestamp);
-    } else {
-      date = new Date();
-    }
-  
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-  };
-
-  const fetchEmployeeData = async () => {
-    try {
-      const attendanceCollectionRef = collection(db, `attendance_${loggedInEmployeeId}`);
-      const attendanceDocs = await getDocs(attendanceCollectionRef);
-      const newEmployeeData = attendanceDocs.docs.reduce((acc, doc) => {
-        const [date, employeeUid] = doc.id.split('_');
-        const data = doc.data();
-        acc[employeeUid] = acc[employeeUid] || { name: data.name, records: {} };
-        acc[employeeUid].records[date] = {
-          checkIn: data.checkIn ? data.checkIn.toDate() : '',
-          checkOut: data.checkOut ? data.checkOut.toDate() : '',
-          totalDuration: data.duration,
-          status: data.status,
-        };
-        return acc;
-      }, {});
-      setEmployeeData(Object.values(newEmployeeData));
-    } catch (error) {
-      console.error('Error fetching employee data:', error);
-    }
-  };
-
   useEffect(() => {
-    if (new Date(selectedMonth).setHours(0, 0, 0, 0) > new Date().setHours(0, 0, 0, 0)) {
-      setEmployeeData([]);
-    } else {
-      fetchEmployeeData();
+    const fetchData = async () => {
+      setIsError(false);
+      setIsLoading(true);
+      try {
+        const attendanceCollectionRef = collection(db, `attendances_${loggedInEmployeeId}`);
+        const attendanceDocs = await getDocs(attendanceCollectionRef);
+        const newEmployeeData = attendanceDocs.docs.reduce((acc, doc) => {
+          const [date, employeeUid] = doc.id.split('_');
+          const data = doc.data();
+          const recordDate = format(data.checkIn ? data.checkIn.toDate() : new Date(), 'yyyy-MM');
+          if (recordDate === selectedMonth) {
+            acc[employeeUid] = acc[employeeUid] || { name: data.name, records: {} };
+            acc[employeeUid].records[date] = {
+              checkIn: data.checkIn ? data.checkIn.toDate() : '',
+              checkOut: data.checkOut ? data.checkOut.toDate() : '',
+              totalDuration: data.duration || '',
+              status: data.status || '',
+            };
+          }
+          return acc;
+        }, {});
+        setEmployeeData(Object.values(newEmployeeData));
+      } catch (error) {
+        console.error('Error fetching employee data:', error);
+        setIsError(true);
+      }
+      setIsLoading(false);
+    };
+
+    if (loggedInEmployeeId && selectedMonth) {
+      fetchData();
     }
-  }, [loggedInEmployeeId, selectedMonth, fetchEmployeeData]);
+  }, [loggedInEmployeeId, selectedMonth]);
 
   const handleMonthChange = (event) => {
     setSelectedMonth(event.target.value);
+  };
+
+  const generateMonthDates = () => {
+    const start = startOfMonth(new Date(selectedMonth));
+    const currentDate = new Date();
+    const end = endOfMonth(new Date(selectedMonth));
+    const adjustedEnd = currentDate < end ? currentDate : end;
+    return eachDayOfInterval({ start, end: adjustedEnd });
   };
 
   const handleDownload = () => {
@@ -113,43 +87,6 @@ const ManagerMonthlyReport = () => {
     XLSX.writeFile(wb, `Monthly_Attendance_Report_${selectedMonth}.xlsx`);
   };
 
-  const generateMonthDates = () => {
-    const start = startOfMonth(new Date(selectedMonth));
-    const currentDate = new Date();
-    const end = endOfMonth(new Date(selectedMonth));
-    const adjustedEnd = currentDate < end ? currentDate : end;
-    return eachDayOfInterval({ start, end: adjustedEnd });
-  };
-
-  const filterEmployeeDataByDate = (employee, selectedDate) => {
-    const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-    return employee.records[formattedDate] || { status: '', totalDuration: '' };
-  };
-
-  const calculateTotalPresents = (employee) => {
-    let totalPresents = 0;
-    const monthDates = generateMonthDates();
-    monthDates.forEach((date) => {
-      const record = filterEmployeeDataByDate(employee, date);
-      if (record.status === 'P') {
-        totalPresents += 1;
-      }
-    });
-    return totalPresents;
-  };
-
-  const doesDataExistForSelectedMonth = () => {
-    const start = startOfMonth(new Date(selectedMonth));
-    const end = endOfMonth(new Date(selectedMonth));
-    
-    return employeeData.some(employee => {
-      return Object.keys(employee.records).some(date => {
-        const recordDate = new Date(date);
-        return recordDate >= start && recordDate <= end;
-      });
-    });
-  };
-
   return (
     <div className="container">
       <h3 className="mb-4">Monthly Attendance Report - {format(new Date(selectedMonth), 'yyyy-MM')}</h3>
@@ -158,7 +95,11 @@ const ManagerMonthlyReport = () => {
         <input type="month" id="monthPicker" className="form-control" value={selectedMonth} onChange={handleMonthChange} max={format(new Date(), 'yyyy-MM')} />
       </div>
       <button type="button" className="btn btn-success mb-3" onClick={handleDownload}>Download Excel</button>
-      {doesDataExistForSelectedMonth() ? (
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : isError ? (
+        <div>Error fetching data</div>
+      ) : employeeData && employeeData.length > 0 ? (
         <table className="styled-table">
           <thead>
             <tr>

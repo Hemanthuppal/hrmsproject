@@ -221,24 +221,24 @@ function EmployeeRegistration() {
       });
 
       // Prepare the email content
-      const emailContent = {
-        to_email: email,
-        subject: "Employee Registration",
-        message: `Employee Credentials.\n\nFull Name: ${fullName}\nEmail: ${email}\nPassword: ${password}\nMobile: ${mobile}\nRole: ${selectedRole}\n\nYou can login by using this URL: https://iiiqbetshrms.web.app/ `,
-      };
-console.log("emailContent=",emailContent)
-      // Email sending functionality
-      const response = await fetch("https://kodamharish.pythonanywhere.com/form_data_send_mail", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(emailContent),
-      });
+//       const emailContent = {
+//         to_email: email,
+//         subject: "Employee Registration",
+//         message: `Employee Credentials.\n\nFull Name: ${fullName}\nEmail: ${email}\nPassword: ${password}\nMobile: ${mobile}\nRole: ${selectedRole}\n\nYou can login by using this URL: https://iiiqbetshrms.web.app/ `,
+//       };
+// console.log("emailContent=",emailContent)
+      
+//       const response = await fetch("https://kodamharish.pythonanywhere.com/form_data_send_mail", {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify(emailContent),
+//       });
 
-      if (!response.ok) {
-        window.alert("Failed to send email");
-      }
+//       if (!response.ok) {
+//         window.alert("Failed to send email");
+//       }
 
       window.alert("Registered Successfully!!!");
 

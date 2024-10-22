@@ -34,6 +34,8 @@ import EmployeesList from "../Manager/EmployeesList";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSignOutAlt,faBars,faL} from "@fortawesome/free-solid-svg-icons";
 import ManagerMonthlyAttendance from "../Manager/ManagerMonthlyAttendance";
+import ManagerMonthlyReport from "../Manager/ManagerMonthlyReport";
+import EmpMonthlyAttendanceReport from "../Manager/EmpMonthlyAttendanceReport";
 
 function ManagerDashboard() {
   const navigate = useNavigate();
@@ -128,7 +130,7 @@ function ManagerDashboard() {
     
     resetAllDropdowns();
     
-    if (page.includes("Attendance&Leave") || page === "managerattendance" || page === "managermonthlyattendance"|| page === "dailyattendance" || page === "monthlyattendancereport" || page === "managerattendance" || page === "managerviewleave" || page === "leaveApplication") {
+    if ( page.includes("Attendance&Leave") || page === "managerattendance" || page === "managermonthlyattendance" || page === "managermonthlyreport"|| page === "dailyattendance" || page === "monthlyattendancereport" || page === "empmonthlyattendacereport" || page === "managerattendance" || page === "managerviewleave" || page === "leaveApplication") {
       setShowAttendance(true);
     } else if (page.includes("EmployeePayroll") || page === "payslip" || page === "expensesapproval" || page === "payoutdisbursements" || page === "loanapproval" || page === "finalsettlement" || page === "advancesalaryapplication") {
       setShowEmployeePayroll(true);
@@ -276,6 +278,12 @@ function ManagerDashboard() {
         >
           My Monthly Attendance
         </li>
+        <li
+          onClick={(e) => { e.stopPropagation(); handlePageChange("managermonthlyreport"); }}
+          style={{ ...menuItemStyle("managermonthlyreport"), color: activePage === "managermonthlyreport" ? "#182566" : "black", backgroundColor: activePage === "managermonthlyreport" ? "white" : "transparent" }}
+        >
+          My Monthly Report
+        </li>
 
           <li
           onClick={(e) => { e.stopPropagation(); handlePageChange("dailyattendance"); }}
@@ -288,6 +296,12 @@ function ManagerDashboard() {
           style={{ ...menuItemStyle("monthlyattendancereport"), color: activePage === "monthlyattendancereport" ? "#182566" : "black", backgroundColor: activePage === "monthlyattendancereport" ? "white" : "transparent" }}
         >
           Employee MonthlyAttendance
+        </li>
+        <li
+          onClick={(e) => { e.stopPropagation(); handlePageChange("empmonthlyattendacereport"); }}
+          style={{ ...menuItemStyle("empmonthlyattendacereport"), color: activePage === "empmonthlyattendacereport" ? "#182566" : "black", backgroundColor: activePage === "empmonthlyattendacereport" ? "white" : "transparent" }}
+        >
+          Employee MonthlyAttendance Report
         </li>
         <li
           onClick={(e) => { e.stopPropagation(); handlePageChange("managerviewleave"); }}
@@ -519,7 +533,9 @@ function ManagerDashboard() {
           {activePage === "managermonthlyattendance" && <ManagerMonthlyAttendance />}
           {activePage === "managerviewleave" && <ManagerViewLeave />}
           {activePage === "dailyattendance" && <DailyAttendance />}
+          {activePage === "managermonthlyreport" && <ManagerMonthlyReport />}
           {activePage === "monthlyattendancereport" && <MonthlyAttendanceReport />}
+          {activePage === "empmonthlyattendacereport" && <EmpMonthlyAttendanceReport />}
           {activePage === "leaveApplication" && <LeaveApplication />}
           {activePage === "performancereport" && <PerformanceReport />}
           {activePage === "manpowertable" && <ManPowerTable />}

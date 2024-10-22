@@ -95,56 +95,120 @@ const records = filteredEmployeeData.slice(firstIndex, lastIndex);
     fetchManagers();
   }, []);
 
+  
+
   // Fetch employee data based on role
   const fetchEmployeeDataBasedOnRole = async () => {
     let managerUids = [];
-
+    let employeeUids = [];
+    
     if (role === 'Employee' && selectedManager) {
       managerUids = [selectedManager];
     } else if (role === 'Manager') {
       managerUids = await fetchManagerUids();
+    } else if (role === 'All') {
+      managerUids = await fetchManagerUids();
+      employeeUids = await fetchEmployeeUids(); // Fetch employee UIDs for 'All' role
     } else {
       return; // Exit if no valid role or manager selected
     }
-
+  
     try {
       let allEmployeeData = [];
-      for (const managerUid of managerUids) {
-        const collectionName = role === 'Employee' ? `attendance_${managerUid}` : `attendances_${managerUid}`;
-        const attendanceCollectionRef = collection(db, collectionName);
-        const attendanceDocs = await getDocs(attendanceCollectionRef);
-        const filteredEmployeeData = {};
-
-        attendanceDocs.docs.forEach(doc => {
-          // Correctly obtain the data from the document
-          const data = doc.data(); // This is the line that defines 'data'
-          const date = doc.id.split('_')[0];
-          const employeeUid = doc.id.split('_')[1];
-        
-          if (!filteredEmployeeData[employeeUid]) {
-            filteredEmployeeData[employeeUid] = {
-              employeeUid,
-              name: data.name, // Use 'data' to access the document's data
-              records: {},
+      if (role === 'All') {
+        // Fetch data for both employees and managers
+        for (const managerUid of managerUids) {
+          const collectionName = `attendances_${managerUid}`;
+          const attendanceCollectionRef = collection(db, collectionName);
+          const attendanceDocs = await getDocs(attendanceCollectionRef);
+          const filteredEmployeeData = {};
+  
+          attendanceDocs.docs.forEach(doc => {
+            const data = doc.data();
+            const date = doc.id.split('_')[0];
+            const employeeUid = doc.id.split('_')[1];
+  
+            if (!filteredEmployeeData[employeeUid]) {
+              filteredEmployeeData[employeeUid] = {
+                employeeUid,
+                name: data.name,
+                records: {},
+              };
+            }
+  
+            filteredEmployeeData[employeeUid].records[date] = {
+              checkIn: formatTimestampToTimeString(data.checkIn), // Convert Firestore Timestamp to time string
+              checkOut: formatTimestampToTimeString(data.checkOut), // Convert Firestore Timestamp to time string
+              duration: data.duration,
+              status: data.status,
             };
-          }
-        
-          // Now 'data' is correctly defined, and we can use it to access the fields
-          filteredEmployeeData[employeeUid].records[date] = {
-            // The next step assumes that 'checkIn' and 'checkOut' are Firestore Timestamps
-            // You need to replace 'formatTimestampToTimeString' with your actual conversion logic
-            // if 'checkIn' and 'checkOut' are stored in a different format
-            checkIn: formatTimestampToTimeString(data.checkIn), // Use 'data' here
-            checkOut: formatTimestampToTimeString(data.checkOut), // And here
-            duration: data.duration, 
-            status: data.status,// And here
-          };
-        });
-        
-
-        allEmployeeData = allEmployeeData.concat(Object.values(filteredEmployeeData));
+          });
+  
+          allEmployeeData = allEmployeeData.concat(Object.values(filteredEmployeeData));
+        }
+  
+        // Fetch employee data from their own collection
+        for (const employeeUid of employeeUids) {
+          const collectionName = `attendance_${employeeUid}`;
+          const attendanceCollectionRef = collection(db, collectionName);
+          const attendanceDocs = await getDocs(attendanceCollectionRef);
+          const filteredEmployeeData = {};
+  
+          attendanceDocs.docs.forEach(doc => {
+            const data = doc.data();
+            const date = doc.id.split('_')[0];
+  
+            if (!filteredEmployeeData[employeeUid]) {
+              filteredEmployeeData[employeeUid] = {
+                employeeUid,
+                name: data.name,
+                records: {},
+              };
+            }
+  
+            filteredEmployeeData[employeeUid].records[date] = {
+              checkIn: formatTimestampToTimeString(data.checkIn), // Convert Firestore Timestamp to time string
+              checkOut: formatTimestampToTimeString(data.checkOut), // Convert Firestore Timestamp to time string
+              duration: data.duration,
+              status: data.status,
+            };
+          });
+  
+          allEmployeeData = allEmployeeData.concat(Object.values(filteredEmployeeData));
+        }
+      } else {
+        // Handle non-'All' roles as before
+        for (const managerUid of managerUids) {
+          const collectionName = role === 'Employee' ? `attendance_${managerUid}` : `attendances_${managerUid}`;
+          const attendanceCollectionRef = collection(db, collectionName);
+          const attendanceDocs = await getDocs(attendanceCollectionRef);
+          const filteredEmployeeData = {};
+  
+          attendanceDocs.docs.forEach(doc => {
+            const data = doc.data();
+            const date = doc.id.split('_')[0];
+            const employeeUid = doc.id.split('_')[1];
+  
+            if (!filteredEmployeeData[employeeUid]) {
+              filteredEmployeeData[employeeUid] = {
+                employeeUid,
+                name: data.name,
+                records: {},
+              };
+            }
+  
+            filteredEmployeeData[employeeUid].records[date] = {
+              checkIn: formatTimestampToTimeString(data.checkIn), // Convert Firestore Timestamp to time string
+              checkOut: formatTimestampToTimeString(data.checkOut), // Convert Firestore Timestamp to time string
+              duration: data.duration,
+              status: data.status,
+            };
+          });
+  
+          allEmployeeData = allEmployeeData.concat(Object.values(filteredEmployeeData));
+        }
       }
-
+  
       setEmployeeData(allEmployeeData);
     } catch (error) {
       console.error('Error fetching employee data:', error);
@@ -277,6 +341,7 @@ const records = filteredEmployeeData.slice(firstIndex, lastIndex);
               <label htmlFor="roleSelect" className="mr-2 form-label">Select Role:</label>
               <select id="roleSelect" className="form-select" onChange={handleRoleChange} value={role}>
                 <option value="" disabled>Select Role</option>
+                <option value="All">All</option>
                 <option value="Manager">Manager</option>
                 <option value="Employee">Employee</option>
               </select>

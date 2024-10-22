@@ -15,7 +15,7 @@ const SelectedDate = () => {
     const fetchAttendanceData = async () => {
       if (loggedInEmployeeId) {
         setIsLoading(true);
-        const attendanceCollectionRef = collection(db, `attendances_${loggedInEmployeeId}`);
+        const attendanceCollectionRef = collection(db, `attendance_${loggedInEmployeeId}`);
         const attendanceDocs = await getDocs(attendanceCollectionRef);
         const data = attendanceDocs.docs.map((doc) => ({
           id: doc.id,
@@ -85,10 +85,9 @@ const SelectedDate = () => {
           value={selectedDate}
           onChange={handleDateChange}
           className="mr-2"
+          max={new Date().toISOString().split('T')[0]} 
         />
-        <button type="submit" className="btn btn-primary">
-          Submit
-        </button>
+       
       </form>
       {isLoading ? (
         <p>Loading...</p>

@@ -50,7 +50,7 @@ function EmployeeDisplay() {
 
   return (
     <div className="container ">
-      <h2>Sales Executives</h2>
+      <h2>Employees</h2>
       <table className="styled-table">
         <thead>
           <tr>

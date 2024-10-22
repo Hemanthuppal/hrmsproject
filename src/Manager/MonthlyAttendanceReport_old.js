@@ -1,25 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from './App';
+import { db } from '../App';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as XLSX from 'xlsx';
 import { useLocation } from 'react-router-dom';
-import { useQuery } from 'react-query'; // Import useQuery
+import { useQuery } from 'react-query';
+
+
+
+
+const fetchEmployeeData = async ({ queryKey }) => {
+  const [_, loggedInEmployeeId, selectedMonth] = queryKey;
+  const attendanceCollectionRef = collection(db, `attendance_${loggedInEmployeeId}`);
+  const attendanceDocs = await getDocs(attendanceCollectionRef);
+  const newEmployeeData = attendanceDocs.docs.reduce((acc, doc) => {
+    const [date, employeeUid] = doc.id.split('_');
+    const data = doc.data();
+    const recordDate = format(data.checkIn ? data.checkIn.toDate() : new Date(), 'yyyy-MM');
+    if (recordDate === selectedMonth) {
+      acc[employeeUid] = acc[employeeUid] || { name: data.name, records: {} };
+      acc[employeeUid].records[date] = {
+        checkIn: data.checkIn ? data.checkIn.toDate() : '',
+        checkOut: data.checkOut ? data.checkOut.toDate() : '',
+        totalDuration: data.duration || '',
+        status: data.status || '',
+      };
+    }
+    return acc;
+  }, {});
+  return Object.values(newEmployeeData);
+};
 
 const ManagerMonthlyReport = () => {
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
   const location = useLocation();
   const loggedInEmployeeId = location.state?.loggedInEmployeeId;
 
+  const { data: employeeData = [], isLoading, isError } = useQuery(
+    ['employeeData', loggedInEmployeeId, selectedMonth],
+    fetchEmployeeData,
+    {
+      staleTime: 1000 * 60 * 60 * 4, // 4 hours
+      cacheTime: 1000 * 60 * 60 * 4, // 4 hours
+      enabled: !!loggedInEmployeeId,
+    }
+  );
+
   const handleMonthChange = (event) => {
-    const { value } = event.target;
-    console.log("Selected month:", value);
-    setSelectedMonth(value);
+    setSelectedMonth(event.target.value);
   };
-  
-  
-  
 
   const generateMonthDates = () => {
     const start = startOfMonth(new Date(selectedMonth));
@@ -28,44 +58,6 @@ const ManagerMonthlyReport = () => {
     const adjustedEnd = currentDate < end ? currentDate : end;
     return eachDayOfInterval({ start, end: adjustedEnd });
   };
-
-  const fetchEmployeeData = async () => {
-  try {
-    const attendanceCollectionRef = collection(db, `attendance_${loggedInEmployeeId}`);
-    const attendanceDocs = await getDocs(attendanceCollectionRef);
-    const newEmployeeData = attendanceDocs.docs.reduce((acc, doc) => {
-      const [date, employeeUid] = doc.id.split('_');
-      const data = doc.data();
-      const recordDate = format(data.checkIn ? data.checkIn.toDate() : new Date(), 'yyyy-MM'); // Get the record date in yyyy-MM format
-      if (recordDate === selectedMonth) { // Check if the record date matches the selected month
-        acc[employeeUid] = acc[employeeUid] || { name: data.name, records: {} };
-        acc[employeeUid].records[date] = {
-          checkIn: data.checkIn ? data.checkIn.toDate() : '',
-          checkOut: data.checkOut ? data.checkOut.toDate() : '',
-          totalDuration: data.duration,
-          status: data.status,
-        };
-      }
-      return acc;
-    }, {});
-    return Object.values(newEmployeeData);
-  } catch (error) {
-    console.error('Error fetching employee data:', error);
-    throw new Error('Failed to fetch employee data');
-  }
-};
-
-
-  const { data: employeeData, isLoading, isError } = useQuery(
-    ['employeeData', loggedInEmployeeId, selectedMonth], // Pass selectedMonth as a dependency
-    fetchEmployeeData,
-    {
-      enabled: !!loggedInEmployeeId && !!selectedMonth,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-    }
-  );
-  
 
   const handleDownload = () => {
     const monthDates = generateMonthDates();
@@ -92,28 +84,28 @@ const ManagerMonthlyReport = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Monthly_Attendance_Report');
     XLSX.writeFile(wb, `Monthly_Attendance_Report_${selectedMonth}.xlsx`);
   };
-  if (isLoading) {
-    console.log("Loading...");
-    return <div>Loading...</div>;
-  }
-  
-  // Render error state
-  if (isError) {
-    console.log("Error fetching data");
-    return <div>Error fetching data</div>;
-  }
-  console.log("Employee data ",employeeData )
-  console.log("Employee data length:", employeeData ? employeeData.length : "Data not loaded yet");
+
 
   return (
     <div className="container">
       <h3 className="mb-4">Monthly Attendance Report - {format(new Date(selectedMonth), 'yyyy-MM')}</h3>
       <div className='mb-3'>
         <label htmlFor="monthPicker" className="form-label">Select Month:</label>
-        <input type="month" id="monthPicker" className="form-control" value={selectedMonth} onChange={handleMonthChange} max={format(new Date(), 'yyyy-MM')} />
+        <input
+          type="month"
+          id="monthPicker"
+          className="form-control"
+          value={selectedMonth}
+          onChange={handleMonthChange}
+          max={format(new Date(), 'yyyy-MM')}
+        />
       </div>
       <button type="button" className="btn btn-success mb-3" onClick={handleDownload}>Download Excel</button>
-      {employeeData && employeeData.length > 0 ? (
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : isError ? (
+        <div>Error fetching data</div>
+      ) : employeeData && employeeData.length > 0 ? (
         <table className="styled-table">
           <thead>
             <tr>
@@ -143,11 +135,12 @@ const ManagerMonthlyReport = () => {
             )}
           </tbody>
         </table>
-     ) : (
-      <div>No data available for the selected month.</div>
-    )}
+      ) : (
+        <div>No data available for the selected month.</div>
+      )}
     </div>
   );
 };
+
 
 export default ManagerMonthlyReport;

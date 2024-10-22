@@ -42,7 +42,7 @@ import ReviewOnTrainer from '../ReviewOnTrainer';
 import ReviewReportOnTrainer from '../ReviewReportOnTrainer';
 import EmployeeCommunication from '../EmployeeCommunication';
 import ExitProcedure from '../ExitProcedure';
-
+import EmployeeMonthlyReport from '../EmployeeMonthlyReport';
 
 function EmployeeDashboard() {
   const navigate = useNavigate();
@@ -284,6 +284,12 @@ function EmployeeDashboard() {
             {isSidebarOpen && "Monthly Attendance"}
           </li>
           <li
+            onClick={() => handlePageChange("monthlyReport")}
+            style={menuItemStyle("monthlyReport")}
+          >
+            {isSidebarOpen && "Monthly Report"}
+          </li>
+          <li
             onClick={() => handlePageChange("viewLeave")}
             style={menuItemStyle("viewLeave")}
           >
@@ -471,6 +477,7 @@ function EmployeeDashboard() {
           {activePage === 'profile' && <EmployeeProfile />}
           {activePage === 'markAttendance' && <MarkAttendance />}
           {activePage === 'monthlyAttendance' && <EmployeeMonthlyAttendance />}
+          {activePage === 'monthlyReport' && <EmployeeMonthlyReport />}
           {activePage === 'viewLeave' && <ViewLeave />}
           {activePage === 'performancereview' && <PerformanceReview />}
           {activePage === 'performancereport' && <EmployeeReport />}

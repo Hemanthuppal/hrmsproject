@@ -38,53 +38,51 @@ function Payslip() {
   return (
     <div className="container">
       <h2>Payslip Data</h2>
-      {employeeData && (
-        <>
-          <table className="styled-table">
-            <thead>
-              <tr>
-                <th>Employee ID</th>
-                <th>Full Name</th>
-                <th>Role</th>
-                <th>Date</th>
-                <th>Gross Salary</th>
-                <th>Net Salary</th>
-                <th>Total Deductions</th>
-                <th>PDF</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employeeData.payslips && employeeData.payslips.length > 0 ? (
-                employeeData.payslips.map((payslip, index) => (
-                  <tr key={payslip.id || index}>
-                    <td>{employeeData.employeeId}</td>
-                    <td>{employeeData.fullName}</td>
-                    <td>{employeeData.role}</td>
-                    <td>{employeeData.date}</td>
-                    <td>{payslip.grossSalary}</td>
-                    <td>{payslip.netSalary}</td>
-                    <td>{payslip.totalDeductions}</td>
-                    <td>
-                      {employeeData.pdfUrl && (
-                        <a
-                          href={employeeData.pdfUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Link
-                        </a>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="8">No payslip data available</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </>
+      {employeeData ? (
+        <table className="styled-table">
+          <thead>
+            <tr>
+              <th>Employee ID</th>
+              <th>Full Name</th>
+              <th>Role</th>
+              <th>Date</th>
+             
+              <th>Gross Salary</th>
+              <th>Net Salary</th>
+              
+              <th>Total Deductions</th>
+              <th>PDF</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{employeeData.employeeId}</td>
+              <td>{employeeData.fullName}</td>
+              <td>{employeeData.role}</td>
+              <td>{employeeData.date}</td>
+            
+              <td>{employeeData.grossSalary}</td>
+              <td>{employeeData.netSalary}</td>
+            
+              <td>{employeeData.totalDeductions}</td>
+              <td>
+                {employeeData.pdfUrl ? (
+                  <a
+                    href={employeeData.pdfUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Link
+                  </a>
+                ) : (
+                  "No PDF"
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      ) : (
+        <p>Loading...</p>
       )}
     </div>
   );

@@ -38,7 +38,8 @@ import TrainingEvaluationReport from '../Manager/TrainingEvaluationReport'
 import ReviewReportFromEmployee from '../Manager/ReviewReportFromEmployee';
 import ManagerCommunication from '../Manager/ManagerCommunication';
 import ExitProcedure from '../Manager/ExitProcedure';
-
+import ManagerMonthlyReport from "../Manager/ManagerMonthlyReport";
+import EmpMonthlyAttendanceReport from "../Manager/EmpMonthlyAttendanceReport";
 function ManagerDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -126,14 +127,7 @@ function ManagerDashboard() {
     setActivePage(page);
     resetAllDropdowns();
     if (
-      page.includes("Attendance&Leave") ||
-      page === "managerattendance" ||
-      page === "managermonthlyattendance" ||
-      page === "dailyattendance" ||
-      page === "monthlyattendancereport" ||
-      page === "managerattendance" ||
-      page === "managerviewleave" ||
-      page === "leaveApplication"
+      page.includes("Attendance&Leave") || page === "managerattendance" || page === "managermonthlyattendance" || page === "managermonthlyreport"|| page === "dailyattendance" || page === "monthlyattendancereport" || page === "empmonthlyattendacereport" || page === "managerattendance" || page === "managerviewleave" || page === "leaveApplication"
     ) {
       setShowAttendance(true);
     } else if (
@@ -319,12 +313,24 @@ function ManagerDashboard() {
         >
           My Monthly Attendance
         </li>
+        <li
+          onClick={(e) => { e.stopPropagation(); handlePageChange("managermonthlyreport"); }}
+          style={{ ...menuItemStyle("managermonthlyreport"), color: activePage === "managermonthlyreport" ? "#182566" : "black", backgroundColor: activePage === "managermonthlyreport" ? "white" : "transparent" }}
+        >
+          My Monthly Report
+        </li>
 
           <li
           onClick={(e) => { e.stopPropagation(); handlePageChange("dailyattendance"); }}
           style={{ ...menuItemStyle("dailyattendance"), color: activePage === "dailyattendance" ? "#182566" : "black", backgroundColor: activePage === "dailyattendance" ? "white" : "transparent" }}
         >
           Employee DailyAttendance
+        </li>
+        <li
+          onClick={(e) => { e.stopPropagation(); handlePageChange("empmonthlyattendacereport"); }}
+          style={{ ...menuItemStyle("empmonthlyattendacereport"), color: activePage === "empmonthlyattendacereport" ? "#182566" : "black", backgroundColor: activePage === "empmonthlyattendacereport" ? "white" : "transparent" }}
+        >
+          Employee MonthlyAttendance Report
         </li>
         <li
           onClick={(e) => { e.stopPropagation(); handlePageChange("monthlyattendancereport"); }}
@@ -565,9 +571,11 @@ function ManagerDashboard() {
           {activePage === "employees" && <EmployeesList loggedInEmployeeId={loggedInEmployeeId} loggedInEmployeeName={loggedInEmployeeName} />}
           {activePage === "managerattendance" && <ManagerAttendance />}
           {activePage === "managermonthlyattendance" && <ManagerMonthlyAttendance />}
+          {activePage === "managermonthlyreport" && <ManagerMonthlyReport />}
           {activePage === "managerviewleave" && <ManagerViewLeave />}
           {activePage === "dailyattendance" && <DailyAttendance />}
           {activePage === "monthlyattendancereport" && <MonthlyAttendanceReport />}
+          {activePage === "empmonthlyattendacereport" && <EmpMonthlyAttendanceReport />}
           {activePage === "leaveApplication" && <LeaveApplication />}
           {activePage === "performancereport" && <PerformanceReport />}
           {activePage === "payslip" && <Payslip />}

@@ -102,7 +102,7 @@ const MonthlyReport = () => {
   };
 
   const handleDownload = () => {
-    const headers = ['User Name', ...monthDates.map(date => format(date, 'dd')), 'Total Present'];
+    const headers = ['Employee Name', ...monthDates.map(date => format(date, 'dd')), 'Total Present'];
     const data = [
       headers,
       ...employeeData.map(employee => [

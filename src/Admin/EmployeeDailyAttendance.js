@@ -213,6 +213,7 @@ const EmployeeDailyAttendance = () => {
               className="form-control"
               value={selectedDate}
               onChange={handleDateChange}
+              max={new Date().toISOString().split('T')[0]}
             />
           </div>
         </div>
@@ -222,7 +223,7 @@ const EmployeeDailyAttendance = () => {
           <thead>
             <tr>
               <th>S.No</th>
-              <th>User Name</th>
+              <th>Employee Name</th>
               <th>Status</th>
               <th>Total Duration</th>
             </tr>

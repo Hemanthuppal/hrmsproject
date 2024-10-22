@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "default": "test-iiiqbets",
+    "varnaaz-hrms": "varnaaz-hrms"
+  },
+  "targets": {},
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
+}

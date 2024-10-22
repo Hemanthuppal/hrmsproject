@@ -23,15 +23,13 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 const queryClient = new QueryClient();
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCfX8PxMS-fsEdVc3vte45m6_HRkQHIXRI",
-  authDomain: "syconehrms.firebaseapp.com",
-  databaseURL: "https://syconehrms-default-rtdb.firebaseio.com",
-  projectId: "syconehrms",
-  storageBucket: "syconehrms.appspot.com",
-  messagingSenderId: "440196769987",
-  appId: "1:440196769987:web:b5fd8f6d48c0becb275a76"
+  apiKey: "AIzaSyAn179awVToJBYIvwngaEfzSJ4oaKUuosc",
+  authDomain: "varnaaz-hrms.firebaseapp.com",
+  projectId: "varnaaz-hrms",
+  storageBucket: "varnaaz-hrms.appspot.com",
+  messagingSenderId: "226501097310",
+  appId: "1:226501097310:web:0dafb40f972a19aac241cf"
 };
-
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);

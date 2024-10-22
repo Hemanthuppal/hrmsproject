@@ -67,38 +67,49 @@ function ManagerPayslip() {
     }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
   
     if (!uid) {
-      console.error("No employee selected");
-      return;
+        console.error("No employee selected");
+        return;
     }
-  
+
     const payslip = {
-      date,
-      employeeId,
-      fullName,
-      role,
-      payslips: payslipData,
+        date,
+        employeeId,
+        fullName,
+        role,
+        basicSalary: payslipData[0]?.basicSalary || "N/A",
+        professionalTax: payslipData[0]?.professionalTax || "N/A",
+        dearnessAllowances: payslipData[0]?.dearnessAllowances || "N/A",
+        houseRentAllowance: payslipData[0]?.houseRentAllowance || "N/A",
+        conveyanceAllowances: payslipData[0]?.conveyanceAllowances || "N/A",
+        medicalAllowances: payslipData[0]?.medicalAllowances || "N/A",
+        leavetravelAllowances: payslipData[0]?.leavetravelAllowances || "N/A",
+        performanceBonus: payslipData[0]?.performanceBonus || "N/A",
+        grossSalary: payslipData[0]?.grossSalary || "N/A",
+        totalDeductions: payslipData[0]?.totalDeductions || "N/A",
+        netSalary: payslipData[0]?.netSalary || "N/A",
+        tds: payslipData[0]?.tds || "N/A",
+        epf: payslipData[0]?.epf || "N/A",
+        otherDeductions: payslipData[0]?.otherDeductions || "N/A",
     };
-  
-    generatePDF(payslip)  // Pass payslip directly without wrapping in an array
-      .then((downloadURL) => {
+
+    try {
+        const downloadURL = await generatePDF(payslip);
         console.log("PDF generated, URL:", downloadURL);
         const payslipPath = `payslip_${uid}/${uid}`;
         const payslipRef = doc(db, payslipPath);
-  
-        return setDoc(payslipRef, { ...payslip, pdfUrl: downloadURL });
-      })
-      .then(() => {
+
+        await setDoc(payslipRef, { ...payslip, pdfUrl: downloadURL });
         console.log("Payslip submitted successfully for employee:", uid);
-        alert("Payslip submitted successfully!"); // Display an alert
-      })
-      .catch((error) => {
+        alert("Payslip submitted successfully!");
+    } catch (error) {
         console.error("Error in the process:", error);
-      });
-  };
+    }
+};
+
 
   useEffect(() => {
     const fetchPayslipData = async () => {
@@ -130,143 +141,76 @@ function ManagerPayslip() {
 
   const generatePDF = async (payslip) => {
     const currentMonthYear = new Date().toLocaleString("default", {
-      month: "long",
-      year: "numeric",
+        month: "long",
+        year: "numeric",
     });
     let tableBody = [["Earnings", "Amount", "Deductions", "Amount"]];
-  
-    // Ensure that payslip is an array
-    const payslipArray = Array.isArray(payslip) ? payslip : [payslip];
-  
-    // Iterate over each payslip and add its details to the table body
-    payslipArray.forEach((singlePayslip) => {
-      // Basic Salary and Professional Tax
-      tableBody.push([
-        "Basic Salary",
-        payslip.basicSalary || "N/A",
-        "Professional Tax",
-        payslip.professionalTax || "N/A",
-      ]);
 
-      // Dearness Allowances and TDS
-      tableBody.push([
-        "Dearness Allowances",
-        payslip.dearnessAllowances || "N/A",
-        "Tax Deducted at Source (TDS)",
-        payslip.tds || "N/A",
-      ]);
-
-      // HRA and EPF
-      tableBody.push([
-        "House Rent Allowance (HRA)",
-        payslip.houseRentAllowance || "N/A",
-        "Employee Provident Fund (EPF)",
-        payslip.epf || "N/A",
-      ]);
-
-      // Conveyance Allowance and Other Deductions
-      tableBody.push([
-        "Conveyance Allowance",
-        payslip.conveyanceAllowances || "N/A",
-        "Other Deductions",
-        payslip.otherDeductions || "N/A",
-      ]);
-
-      // Medical Allowance
-      tableBody.push([
-        "Medical Allowance",
-        payslip.medicalAllowances || "N/A",
-        "", // Empty column for alignment
-        "",
-      ]);
-
-      // Leave Travel Allowance (LTA)
-      tableBody.push([
-        "Leave Travel Allowance (LTA)",
-        payslip.leavetravelAllowances || "N/A",
-        "", // Empty column for alignment
-        "",
-      ]);
-
-      // Performance Bonus
-      tableBody.push([
-        "Performance Bonus",
-        payslip.performanceBonus || "N/A",
-        "", // Empty column for alignment
-        "",
-      ]);
-
-      // Gross Salary and Total Deductions
-      tableBody.push([
-        "Gross Salary",
-        payslip.grossSalary || "N/A",
-        "Total Deductions",
-        payslip.totalDeductions || "N/A",
-      ]);
-
-      // Net Salary
-      tableBody.push([
-        "Net Salary",
-        payslip.netSalary || "N/A",
-        "", // Empty column for alignment
-        "",
-      ]);
-    });
+    // Map the payslip data to the table body
+    tableBody.push(["Basic Salary", payslip.basicSalary || "N/A", "Professional Tax", payslip.professionalTax || "N/A"]);
+    tableBody.push(["Dearness Allowances", payslip.dearnessAllowances || "N/A", "Tax Deducted at Source (TDS)", payslip.tds || "N/A"]);
+    tableBody.push(["House Rent Allowance (HRA)", payslip.houseRentAllowance || "N/A", "Employee Provident Fund (EPF)", payslip.epf || "N/A"]);
+    tableBody.push(["Conveyance Allowance", payslip.conveyanceAllowances || "N/A", "Other Deductions", payslip.otherDeductions || "N/A"]);
+    tableBody.push(["Medical Allowance", payslip.medicalAllowances || "N/A", "", ""]);
+    tableBody.push(["Leave Travel Allowance (LTA)", payslip.leavetravelAllowances || "N/A", "", ""]);
+    tableBody.push(["Performance Bonus", payslip.performanceBonus || "N/A", "", ""]);
+    tableBody.push(["Gross Salary", payslip.grossSalary || "N/A", "Total Deductions", payslip.totalDeductions || "N/A"]);
+    tableBody.push(["Net Salary", payslip.netSalary || "N/A", "", ""]);
 
     const docDefinition = {
-      content: [
-        { text: `Payslip - ${currentMonthYear}`, style: "header" },
-        {
-          columns: [
-            { text: `Employee ID: ${employeeId}`, style: "subheader" },
-            { text: `Full Name: ${fullName}`, style: "subheader" },
-          ],
-          columnGap: 10,
+        content: [
+            { text: `Payslip - ${currentMonthYear}`, style: "header" },
+            {
+                columns: [
+                    { text: `Employee ID: ${payslip.employeeId}`, style: "subheader" },
+                    { text: `Full Name: ${payslip.fullName}`, style: "subheader" },
+                ],
+                columnGap: 10,
+            },
+            {
+                columns: [
+                    { text: `Date: ${payslip.date}`, style: "subheader" },
+                    { text: `Role: ${payslip.role}`, style: "subheader" },
+                ],
+                columnGap: 10,
+            },
+            {
+                style: "tableExample",
+                table: {
+                    body: tableBody,
+                },
+            },
+        ],
+        styles: {
+            header: {
+                fontSize: 18,
+                bold: true,
+                margin: [0, 0, 0, 10],
+                alignment: "center",
+            },
+            subheader: {
+                fontSize: 14,
+                margin: [0, 10, 0, 5],
+            },
+            tableExample: {
+                margin: [0, 5, 0, 15],
+            },
         },
-        {
-          columns: [
-            { text: `Date: ${date}`, style: "subheader" },
-            { text: `Role: ${role}`, style: "subheader" },
-          ],
-          columnGap: 10,
-        },
-        {
-          style: "tableExample",
-          table: {
-            body: tableBody,
-          },
-        },
-      ],
-      styles: {
-        header: {
-          fontSize: 18,
-          bold: true,
-          margin: [0, 0, 0, 10],
-          alignment: "center",
-        },
-        subheader: {
-          fontSize: 14,
-          margin: [0, 10, 0, 5],
-        },
-        tableExample: {
-          margin: [0, 5, 0, 15],
-        },
-      },
     };
 
     const pdf = pdfMake.createPdf(docDefinition);
     return new Promise((resolve, reject) => {
-      pdf.getBlob(async (blob) => {
-        try {
-          const downloadURL = await storePDF(blob, `${payslip.employeeId}-${payslip.date}.pdf`);
-          resolve(downloadURL);
-        } catch (error) {
-          reject(error);
-        }
-      });
+        pdf.getBlob(async (blob) => {
+            try {
+                const downloadURL = await storePDF(blob, `${payslip.employeeId}-${payslip.date}.pdf`);
+                resolve(downloadURL);
+            } catch (error) {
+                reject(error);
+            }
+        });
     });
-  };
-  
+};
+
 const storePDF = async (blob, fileName) => {
   const storage = getStorage();
   const storageRef = ref(storage, `payslips/${fileName}`);

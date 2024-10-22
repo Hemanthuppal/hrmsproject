@@ -38,7 +38,7 @@ function AddHoliday() {
       setDate('');
       setDay('');
       setFestival('');
-
+      alert('Holiday added successfully!');
       console.log('Holiday added to Firestore with ID:', docRef.id);
     } catch (error) {
       console.error('Error adding holiday:', error);
@@ -51,10 +51,17 @@ function AddHoliday() {
   const handleDateChange = (e) => {
     const selectedDate = e.target.value;
     setDate(selectedDate);
-    
+
     // Calculate the day based on the selected date
     const selectedDay = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' });
     setDay(selectedDay);
+  };
+
+  const handleFestivalChange = (e) => {
+    const input = e.target.value;
+    // Allow only letters and spaces
+    const filteredInput = input.replace(/[^a-zA-Z\s]/g, '');
+    setFestival(filteredInput);
   };
 
   return (
@@ -77,6 +84,7 @@ function AddHoliday() {
                   name="date"
                   value={date}
                   onChange={handleDateChange}
+                  min={new Date().toISOString().split('T')[0]} // Set minimum date to today
                   required
                 />
               </div>
@@ -104,7 +112,7 @@ function AddHoliday() {
                   type="text"
                   name="festival"
                   value={festival}
-                  onChange={(e) => setFestival(e.target.value)}
+                  onInput={handleFestivalChange} // Use onInput to filter input in real-time
                   required
                 />
               </div>
@@ -112,8 +120,9 @@ function AddHoliday() {
 
               <div className="">
                 <center>
-                  <button type="submit" name="button" className="btn btn-sm btn-primary text-white small-btn small-btn" disabled={isAdding}>
+                  <button type="submit" name="button"  style={{ fontSize: '1.2em', padding: '5px 20px' }} className="btn btn-sm btn-primary text-white small-btn small-btn" disabled={isAdding}>
                     {isAdding ? 'Adding...' : 'Add'}
+                   
                   </button>
                 </center>
               </div>

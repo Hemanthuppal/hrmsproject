@@ -286,19 +286,19 @@ function AdminDashboard() {
           onClick={(e) => { e.stopPropagation(); handlePageChange("employeedailyattendance"); }}
           style={{ ...menuItemStyle("employeedailyattendance"), color: activePage === "employeedailyattendance" ? "#182566" : "black", backgroundColor: activePage === "employeedailyattendance" ? "white" : "transparent" }}
         >
-          DailyAttendance
+          Daily Attendance
         </li>
         <li
           onClick={(e) => { e.stopPropagation(); handlePageChange("employeemonthlyreport"); }}
           style={{ ...menuItemStyle("employeemonthlyreport"), color: activePage === "employeemonthlyreport" ? "#182566" : "black", backgroundColor: activePage === "employeemonthlyreport" ? "white" : "transparent" }}
         >
-          MonthlyAttendance
+          Monthly Attendance
         </li>
         <li
           onClick={(e) => { e.stopPropagation(); handlePageChange("monthlyreport"); }}
           style={{ ...menuItemStyle("monthlyreport"), color: activePage === "monthlyreport" ? "#182566" : "black", backgroundColor: activePage === "monthlyreport" ? "white" : "transparent" }}
         >
-          MonthlyReport
+          Monthly Report
         </li>
         <li
           onClick={(e) => { e.stopPropagation(); handlePageChange("employeeleaveapplication"); }}
